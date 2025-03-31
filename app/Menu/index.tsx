@@ -4,6 +4,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 
 export default function index() {
   const [image, setImage] = useState(undefined as any);
+  const [isVisible, setIsVisible] = useState(false);
 
   return (
     <View
@@ -18,9 +19,9 @@ export default function index() {
       </View> 
       : 
       <TouchableOpacity
-      onPress={()=>()}
+        onPress={()=> setIsVisible(true)}
       >
-      <Entypo name="camera" size={24} color="black" />
+        <Entypo name="camera" size={24} color="black" />
       </TouchableOpacity>
        }
 
@@ -36,7 +37,10 @@ export default function index() {
       {/* Los tres botones que debe tener son */}
       {/* Edid */}
       {/* Delete */}
-      {/*Select Image */}
+      {/* Guardar */}
+      <CameraModal
+      isVisible={isVisible}
+      />
     </View>
   );
 }
