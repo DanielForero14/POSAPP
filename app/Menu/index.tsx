@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Touchable, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import Entypo from '@expo/vector-icons/Entypo';
+import CamaraModal from "@/components/CamaraModal";
 
 export default function index() {
   const [image, setImage] = useState(undefined as any);
@@ -38,8 +39,9 @@ export default function index() {
       {/* Edid */}
       {/* Delete */}
       {/* Guardar */}
-      <CameraModal
-      isVisible={isVisible}
+      <CamaraModal
+          isVisible={isVisible}
+          image={image}
       />
     </View>
   );
