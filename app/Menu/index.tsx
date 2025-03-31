@@ -3,10 +3,10 @@ import React, { useState } from 'react'
 
 export default function index() {
     const [image, setImage] = useState(undefined as any);
-    
+
   return (
     <View>
-      <Text>index</Text>
+        
     </View>
   )
 }
