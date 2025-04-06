@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  Button,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../FirebaseFolder/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
@@ -12,17 +20,14 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
-      // Iniciar sesión
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
 
-      // Obtener rol desde Firestore
       const userDoc = await getDoc(doc(db, "users", uid));
 
       if (userDoc.exists()) {
         const role = userDoc.data().role;
 
-        // Redirigir según rol
         if (role === "cliente") {
           router.push("./screens/cliente");
         } else if (role === "cajero") {
@@ -35,7 +40,6 @@ const LoginScreen = () => {
       } else {
         Alert.alert("No se encontró el usuario en Firestore");
       }
-
     } catch (error: any) {
       Alert.alert("Error al iniciar sesión", error.message);
     }
@@ -50,6 +54,7 @@ const LoginScreen = () => {
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         placeholder="Contraseña"
@@ -59,6 +64,9 @@ const LoginScreen = () => {
         secureTextEntry
       />
       <Button title="Ingresar" onPress={handleLogin} />
+      <TouchableOpacity onPress={() => router.push("/register")}>
+        <Text style={styles.linkText}>¿No tienes cuenta? Regístrate aquí</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -66,20 +74,23 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-  },
+  container: { flex: 1, justifyContent: "center", padding: 20 },
   input: {
     borderWidth: 1,
+    borderColor: "#ccc",
     padding: 10,
-    marginBottom: 15,
+    marginBottom: 10,
     borderRadius: 5,
   },
   title: {
     fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
+  },
+  linkText: {
+    marginTop: 15,
+    color: "blue",
     textAlign: "center",
   },
 });
