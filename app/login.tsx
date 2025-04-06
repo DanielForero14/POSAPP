@@ -1,16 +1,41 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../Firebase/firebaseConfig";
+import { auth, db } from "../FirebaseFolder/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { useRouter } from "expo-router";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert("Inicio de sesión exitoso");
+      // Iniciar sesión
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+
+      // Obtener rol desde Firestore
+      const userDoc = await getDoc(doc(db, "users", uid));
+
+      if (userDoc.exists()) {
+        const role = userDoc.data().role;
+
+        // Redirigir según rol
+        if (role === "cliente") {
+          router.push("./screens/cliente");
+        } else if (role === "cajero") {
+          router.push("./screens/cajero");
+        } else if (role === "chef") {
+          router.push("./screens/chef");
+        } else {
+          Alert.alert("Rol no reconocido");
+        }
+      } else {
+        Alert.alert("No se encontró el usuario en Firestore");
+      }
+
     } catch (error: any) {
       Alert.alert("Error al iniciar sesión", error.message);
     }
@@ -33,7 +58,7 @@ const LoginScreen = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Entrar" onPress={handleLogin} />
+      <Button title="Ingresar" onPress={handleLogin} />
     </View>
   );
 };
@@ -41,17 +66,19 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+  },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 15,
     borderRadius: 5,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
