@@ -1,16 +1,9 @@
+// LoginScreen.tsx
 import React, { useState } from "react";
-import {
-  View,
-  TextInput,
-  Button,
-  Text,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
+import { View, TextInput, Button, Alert, StyleSheet } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../FirebaseFolder/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../FirebaseFolder/firebaseConfig";
 import { useRouter } from "expo-router";
 
 const LoginScreen = () => {
@@ -20,25 +13,34 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
+      // Autenticación del usuario
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
 
-      const userDoc = await getDoc(doc(db, "users", uid));
+      // Buscar el rol en Firestore
+      const docRef = doc(db, "users", uid);
+      const docSnap = await getDoc(docRef);
 
-      if (userDoc.exists()) {
-        const role = userDoc.data().role;
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const role = userData.role;
 
-        if (role === "cliente") {
-          router.push("./screens/cliente");
-        } else if (role === "cajero") {
-          router.push("./screens/cajero");
-        } else if (role === "chef") {
-          router.push("./screens/chef");
-        } else {
-          Alert.alert("Rol no reconocido");
+        // Redirigir según el rol
+        switch (role) {
+          case "cliente":
+            router.push("./screens/cliente");
+            break;
+          case "chef":
+            router.push("./screens/ches");
+            break;
+          case "cajero":
+            router.push("./screens/cajero");
+            break;
+          default:
+            Alert.alert("Rol no reconocido");
         }
       } else {
-        Alert.alert("No se encontró el usuario en Firestore");
+        Alert.alert("No se encontraron datos del usuario");
       }
     } catch (error: any) {
       Alert.alert("Error al iniciar sesión", error.message);
@@ -47,50 +49,27 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
       <TextInput
         placeholder="Correo"
-        style={styles.input}
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
+        style={styles.input}
       />
       <TextInput
         placeholder="Contraseña"
-        style={styles.input}
         value={password}
         onChangeText={setPassword}
+        style={styles.input}
         secureTextEntry
       />
-      <Button title="Ingresar" onPress={handleLogin} />
-      <TouchableOpacity onPress={() => router.push("/register")}>
-        <Text style={styles.linkText}>¿No tienes cuenta? Regístrate aquí</Text>
-      </TouchableOpacity>
+      <Button title="Iniciar sesión" onPress={handleLogin} />
     </View>
   );
 };
 
-export default LoginScreen;
-
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  linkText: {
-    marginTop: 15,
-    color: "blue",
-    textAlign: "center",
-  },
+  container: { padding: 20 },
+  input: { marginBottom: 10, borderBottomWidth: 1, padding: 8 },
 });
+
+export default LoginScreen;

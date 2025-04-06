@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
+import { View, TextInput, Button, Text, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../FirebaseFolder/firebaseConfig";
@@ -11,9 +11,28 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState("cliente");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
+  const validateFields = () => {
+    if (!email.trim() || !password.trim() || !name.trim()) {
+      setErrorMessage("Todos los campos son obligatorios");
+      return false;
+    }
+    if (password.length < 6) {
+      setErrorMessage("La contraseña debe tener al menos 6 caracteres");
+      return false;
+    }
+    setErrorMessage("");
+    return true;
+  };
+
   const handleRegister = async () => {
+    if (!validateFields()) return;
+    
+    setIsLoading(true);
+    
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
@@ -22,27 +41,16 @@ const RegisterScreen = () => {
         email,
         name,
         role,
+        createdAt: new Date().toISOString()
       });
 
-      Alert.alert("Registro exitoso");
-
-      // Redirigir según el rol
-      switch (role) {
-        case "cliente":
-          router.push("./screens/cliente");
-          break;
-        case "chef":
-          router.push("./screens/ches");
-          break;
-        case "cajero":
-          router.push("./screens/cajero");
-          break;
-        default:
-          router.push("/");
-      }
+      // Redirigir automáticamente a login después de registro exitoso
+      router.replace("/login");
 
     } catch (error: any) {
-      Alert.alert("Error al registrarse", error.message);
+      setErrorMessage("Error al registrar. Verifica tus datos.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,20 +59,22 @@ const RegisterScreen = () => {
       <Text style={styles.title}>Registro</Text>
 
       <TextInput
-        placeholder="Nombre"
+        placeholder="Nombre completo *"
         style={styles.input}
         value={name}
         onChangeText={setName}
+        autoCapitalize="words"
       />
       <TextInput
-        placeholder="Correo"
+        placeholder="Correo electrónico *"
         style={styles.input}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
-        placeholder="Contraseña"
+        placeholder="Contraseña (mínimo 6 caracteres) *"
         style={styles.input}
         value={password}
         onChangeText={setPassword}
@@ -82,7 +92,20 @@ const RegisterScreen = () => {
         <Picker.Item label="Cajero" value="cajero" />
       </Picker>
 
-      <Button title="Registrarse" onPress={handleRegister} />
+      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+      <Button 
+        title={isLoading ? "Registrando..." : "Crear cuenta"} 
+        onPress={handleRegister} 
+        disabled={isLoading}
+      />
+
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => router.push("/login")}
+      >
+        <Text style={styles.backButtonText}>¿Ya tienes cuenta? Inicia sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -94,24 +117,47 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
-    marginBottom: 16,
+    marginBottom: 24,
     textAlign: "center",
+    fontWeight: 'bold',
+    color: '#333',
   },
   input: {
     borderWidth: 1,
-    padding: 10,
-    marginBottom: 12,
+    borderColor: '#ddd',
+    padding: 12,
+    marginBottom: 16,
     borderRadius: 8,
+    fontSize: 16,
   },
   label: {
     fontWeight: "bold",
-    marginTop: 12,
+    marginTop: 8,
+    marginBottom: 8,
+    color: '#444',
   },
   picker: {
     height: 50,
-    marginBottom: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  backButton: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  backButtonText: {
+    color: '#3498db',
+    fontSize: 16,
   },
 });
